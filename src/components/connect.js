@@ -46,7 +46,7 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
   }
 
   const finalMergeProps = mergeProps || defaultMergeProps
-  const { pure = true, withRef = false } = options
+  const { pure = true, withRef = false, idProp, subscribeMethod } = options
   const checkMergedEquals = pure && finalMergeProps !== defaultMergeProps
 
   // Helps track hot reloading.
@@ -196,7 +196,16 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
 
       trySubscribe() {
         if (shouldSubscribe && !this.unsubscribe) {
-          this.unsubscribe = this.store.subscribe(this.handleChange.bind(this))
+          const subscribe = this.store[subscribeMethod] || this.store.subscribe
+          const id = String(this.props[idProp])
+
+          if (id) {
+            this.unsubscribe = subscribe(this.handleChange.bind(this), id)
+          }
+          else {
+            this.unsubscribe = subscribe(this.handleChange.bind(this))
+          }
+          
           this.handleChange()
         }
       }
